@@ -1,10 +1,10 @@
 # loudness
 
-Toggles a LED if a level of loudness exceed given threshold.
+Toggles a LED if level of loudness exceed given threshold.
 
 Loudness level is captured with the [Groove Loudness Sensor][1].
 
-The values are Squared to represent the energy of the input
+The values are squared to represent the energy of the input
 Signal and low pass filtered via a small ring buffer.
 
 Timing is implemented using the Timer library
