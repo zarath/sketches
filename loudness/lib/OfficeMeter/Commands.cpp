@@ -1,20 +1,10 @@
 #include <Arduino.h>
-
-#include "Loudness.hxx"
-
-Settings defLimits {
-  .noiseLower = 10000,
-  .noiseUpper = 12000,
-  .samplePeriod = 100,   // 100ms
-  .reportPeriod = 1000,  // 1s
-};
-
-Settings *limits = &defLimits;
-
+#include "Settings.hxx"
+#include "Commands.hxx"
 
 void idnCmd(const String &param){
   Serial.println("DG5DBH, Noisemeter, 0001, 0.1");
-}
+};
 
 void setCmd(const String &param){
   if (param.startsWith("noiselower:")) {

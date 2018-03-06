@@ -1,60 +1,23 @@
 #include <Arduino.h>
 // #include <EEPROM.h>
 #include <Timer.h>
+#include <Settings.hxx>
 #include <Loudness.hxx>
-
-#if PLTF_STM32
-const int analogPin = PA0;
-const int ledPin = PC13;
-const int dbgPin = PB12;
-#else  // default: AVR
-const int analogPin = 0;
-const int ledPin = 13;
-const int dbgPin = 7;
-#endif"";
+#include <Commands.hxx>
 
 Timer t;
-// current reaing (rms)
-uint32_t analogVal = 0;
-//
-// highest noise val has 10 ** 2 bits / 12 ** 2 bits
-uint32_t ringBuf[ringSize];
-
-
-uint32_t getAvg(){
-  // AVR:   75µs
-  // STM32: 12µs
-  uint32_t avg = 0;
-  for (int i=0; i < ringSize; i++){
-    avg += ringBuf[i];
-  }
-  return (avg / ringSize);
-}
-
-void takeReading()
-{
-  // AVR:   140µs
-  // STM32:   8µs
-  static int ringPos = 0;
-
-  analogVal = analogRead(analogPin);
-  // make square as rms matters
-  analogVal *= analogVal;
-  ringBuf[ringPos++] = analogVal;
-  ringPos %= ringSize;
-}
 
 void reportReadings()
 {
   static uint32_t noiseAvg = 0;
-  noiseAvg = getAvg();
+  noiseAvg = loudness::getAvg();
   if (noiseAvg >= limits->noiseUpper) {
     digitalWrite(ledPin, HIGH);
   } else if(noiseAvg <= limits->noiseLower) {
     digitalWrite(ledPin, LOW);
   }
   Serial.print("noise:");
-  Serial.print(analogVal);
+  Serial.print(loudness::getCurrent());
   Serial.print(":");
   Serial.print(noiseAvg);
   Serial.print(":");
@@ -92,11 +55,7 @@ void setup() {
   // ReadEEPROM
   loadCmd("");
 
-  // Clear ring buffer
-  for(int i = 0; i < ringSize; i++){
-    ringBuf[i] = 0;
-  }
-  t.every(limits->samplePeriod, takeReading);
+  t.every(limits->samplePeriod, loudness::takeReading);
   t.every(limits->reportPeriod, reportReadings);
 }
 
