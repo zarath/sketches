@@ -7,17 +7,22 @@
 
 Timer t;
 
+auto loud = loudness::Loudness(analogPin);
+void loudcb(){
+  loud.read();
+}
+
 void reportReadings()
 {
   static uint32_t noiseAvg = 0;
-  noiseAvg = loudness::getAvg();
+  noiseAvg = loud.getSqAvg();
   if (noiseAvg >= limits->noiseUpper) {
     digitalWrite(ledPin, HIGH);
   } else if(noiseAvg <= limits->noiseLower) {
     digitalWrite(ledPin, LOW);
   }
   Serial.print("noise:");
-  Serial.print(loudness::getCurrent());
+  Serial.print(loud.get());
   Serial.print(":");
   Serial.print(noiseAvg);
   Serial.print(":");
@@ -45,7 +50,8 @@ inline void doInput(){
 
 }
 
-void setup() {
+void setup() {//  Serial.print(loudness::getCurrent());
+
   Serial.begin(9600);
 
   // Setup pins
@@ -54,8 +60,10 @@ void setup() {
 
   // ReadEEPROM
   loadCmd("");
-
-  t.every(limits->samplePeriod, loudness::takeReading);
+  // calibration option 
+  loud.set0level(80);
+//  t.every(limits->samplePeriod, loudness::takeReading);
+  t.every(limits->samplePeriod, loudcb);
   t.every(limits->reportPeriod, reportReadings);
 }
 
